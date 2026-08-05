@@ -1,0 +1,19 @@
+{
+  "name": "singapore-textiles-readymades-studio",
+  "private": true,
+  "version": "1.0.0",
+  "main": "package.json",
+  "dependencies": {
+    "sanity": "^3.38.0",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "styled-components": "^6.1.11",
+    "lucide-react": "^0.395.0"
+  },
+  "scripts": {
+    "dev": "sanity dev --port 3333",
+    "start": "sanity start",
+    "build": "sanity build",
+    "deploy": "sanity deploy"
+  }
+}

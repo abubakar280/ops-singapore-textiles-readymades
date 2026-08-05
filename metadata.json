@@ -1,0 +1,8 @@
+{
+  "name": "Remix sanity OPS Singapore Textiles \u0026 Readymades",
+  "description": "Responsive website for Singapore Textiles \u0026 Readymades in Madurai, Tamil Nadu. A trusted shop for wholesale and retail clothing, group order dresses, and clothing resellers.",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}

@@ -1,0 +1,71 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@300;400;500;600;700;800&family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap');
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Inter", ui-sans-serif, system-ui, -apple-system, sans-serif;
+  --font-heading: "Outfit", sans-serif;
+  --font-serif: "Playfair Display", serif;
+
+  --color-warm-ivory: #FFF9F3;
+  --color-soft-cream: #FFFDF8;
+  --color-light-beige: #F3EBDD;
+  --color-pale-grey: #F5F5F2;
+  --color-main-text: #292723;
+  --color-muted-text: #68635D;
+  --color-soft-border: #E8E0D5;
+
+  --color-muted-blue: #5C839B;
+  --color-soft-coral: #E37C6D;
+  --color-warm-yellow: #E6B84A;
+  --color-pastel-peach: #F4A286;
+  --color-sage-green: #7D9D82;
+  --color-soft-lavender: #9D96B8;
+}
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+    color: var(--color-main-text);
+    background-color: var(--color-soft-cream);
+  }
+
+  body {
+    font-family: var(--font-sans);
+    overflow-x: hidden;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    font-family: var(--font-heading);
+  }
+
+  /* Custom focus states for better accessibility */
+  *:focus-visible {
+    outline: 2px solid var(--color-soft-coral);
+    outline-offset: 2px;
+  }
+}
+
+/* Custom scrollbar to match our aesthetic */
+::-webkit-scrollbar {
+  width: 8px;
+}
+::-webkit-scrollbar-track {
+  background: var(--color-soft-cream);
+}
+::-webkit-scrollbar-thumb {
+  background: var(--color-light-beige);
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-soft-border);
+}
+
+/* Fade-in animations */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.6s ease-out forwards;
+}

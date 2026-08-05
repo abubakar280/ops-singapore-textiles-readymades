@@ -1,0 +1,28 @@
+# Dependencies
+node_modules/
+studio/node_modules/
+
+# Sanity generated files
+studio/.sanity/
+
+# Build output
+dist/
+build/
+studio/dist/
+
+# Coverage
+coverage/
+
+# Environment files
+.env
+.env.local
+.env.*
+!.env.example
+
+# Logs
+*.log
+npm-debug.log*
+
+# OS files
+.DS_Store
+Thumbs.db
