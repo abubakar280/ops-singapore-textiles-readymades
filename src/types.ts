@@ -107,15 +107,24 @@ export interface SanityImage {
 
 export interface SanityCategory {
   _id: string;
-  title: string;
-  slug: {
+  name?: string;
+  title?: string;
+  slug?: {
     _type: "slug";
     current: string;
-  };
-  categoryKey: "mens" | "womens" | "kids-baby" | "group-dresses" | "islamic" | "home-essentials";
+  } | string;
+  categoryKey: string;
+  shortDescription?: string;
+  fullDescription?: string;
   description?: string;
   coverImage?: SanityImage;
+  heroImage?: SanityImage;
+  cardImage?: SanityImage;
+  bannerImage?: SanityImage;
+  badgeText?: string;
   displayOrder?: number;
+  showInHero?: boolean;
+  showInCollections?: boolean;
   active?: boolean;
   seoTitle?: string;
   seoDescription?: string;

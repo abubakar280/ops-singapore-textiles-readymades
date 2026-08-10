@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useState, useMemo } from "react";
 import { Link } from "react-router-dom";
 import { motion, useReducedMotion } from "motion/react";
 import { ArrowRight } from "lucide-react";
@@ -6,12 +6,17 @@ import {
   CATEGORIES_CONFIG,
   getIconForCategory,
 } from "../data/categoryConfig";
+import { sanityClient } from "../lib/sanityClient";
+import { ALL_CATEGORIES_QUERY, resolveImageUrl } from "../lib/sanityQueries";
+import { SanityCategory } from "../types";
 
 interface DisplayCategory {
   key: string;
   slug: string;
   name: string;
   description: string;
+  badgeText: string;
+  cardImage?: string;
   displayOrder: number;
 }
 
@@ -75,20 +80,58 @@ const STYLE_MAP: Record<string, StyleConfig> = {
 
 export const InteractiveCollections: React.FC = () => {
   const prefersReducedMotion = useReducedMotion();
+  const [sanityCategories, setSanityCategories] = useState<SanityCategory[]>([]);
+  const [loadedSanity, setLoadedSanity] = useState<boolean>(false);
 
-  /**
-   * Categories are fixed website navigation.
-   * Products inside these categories will come from Sanity.
-   */
-  const categories: DisplayCategory[] = CATEGORIES_CONFIG.map(
-    (config, index) => ({
+  useEffect(() => {
+    let isMounted = true;
+    async function loadCategories() {
+      if (!sanityClient) return;
+      try {
+        const data = await sanityClient.fetch(ALL_CATEGORIES_QUERY);
+        if (isMounted && Array.isArray(data) && data.length > 0) {
+          setSanityCategories(data);
+          setLoadedSanity(true);
+        }
+      } catch (err) {
+        console.warn("Error loading categories for InteractiveCollections:", err);
+      }
+    }
+    loadCategories();
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  const categories: DisplayCategory[] = useMemo(() => {
+    if (loadedSanity && sanityCategories.length > 0) {
+      const activeCollections = sanityCategories
+        .filter((c) => c.active !== false && c.showInCollections !== false)
+        .sort((a, b) => (a.displayOrder ?? 99) - (b.displayOrder ?? 99));
+
+      if (activeCollections.length > 0) {
+        return activeCollections.map((cat, idx) => ({
+          key: cat.categoryKey,
+          slug: typeof cat.slug === "object" ? cat.slug.current : cat.slug || cat.categoryKey,
+          name: cat.name || cat.title || "Category",
+          description: cat.shortDescription || cat.fullDescription || cat.description || "",
+          badgeText: cat.badgeText || (cat.categoryKey === "group-dresses" ? "Group Order Specialists" : "Wholesale & Retail"),
+          cardImage: resolveImageUrl(cat.cardImage),
+          displayOrder: cat.displayOrder ?? idx,
+        }));
+      }
+    }
+
+    return CATEGORIES_CONFIG.map((config, index) => ({
       key: config.key,
       slug: config.slug,
       name: config.name,
       description: config.description || "",
+      badgeText: config.key === "group-dresses" ? "Group Order Specialists" : "Wholesale & Retail",
+      cardImage: undefined,
       displayOrder: index,
-    })
-  );
+    }));
+  }, [loadedSanity, sanityCategories]);
 
   const headerVariants = {
     hidden: {
@@ -100,7 +143,7 @@ export const InteractiveCollections: React.FC = () => {
       y: 0,
       transition: {
         duration: 0.6,
-        ease: [0.215, 0.61, 0.355, 1],
+        ease: [0.215, 0.61, 0.355, 1] as const,
       },
     },
   };
@@ -127,7 +170,7 @@ export const InteractiveCollections: React.FC = () => {
       y: 0,
       transition: {
         duration: 0.5,
-        ease: "easeOut",
+        ease: "easeOut" as const,
       },
     },
   };
@@ -185,28 +228,42 @@ export const InteractiveCollections: React.FC = () => {
                 <div
                   className={`relative h-48 sm:h-56 w-full overflow-hidden select-none bg-gradient-to-tr ${style.gradient}`}
                 >
-                  <div className="absolute inset-4 border border-dashed border-main-text/[0.05] rounded-xl pointer-events-none" />
+                  <div className="absolute inset-4 border border-dashed border-main-text/[0.05] rounded-xl pointer-events-none z-10" />
 
-                  <div className="w-full h-full flex flex-col items-center justify-center relative p-6">
-                    <div
-                      className={`p-4 rounded-full ${style.iconBg} mb-3 shadow-3xs transition-transform duration-300 group-hover:scale-105`}
-                    >
-                      <Icon size={32} className="stroke-[1.5]" />
+                  {cat.cardImage ? (
+                    <>
+                      <img
+                        src={cat.cardImage}
+                        alt={cat.name}
+                        referrerPolicy="no-referrer"
+                        className="absolute inset-0 w-full h-full object-cover object-center transition-transform duration-500 ease-out group-hover:scale-[1.03] pointer-events-none"
+                      />
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent pointer-events-none" />
+                    </>
+                  ) : (
+                    <div className="w-full h-full flex flex-col items-center justify-center relative p-6">
+                      <div
+                        className={`p-4 rounded-full ${style.iconBg} mb-3 shadow-3xs transition-transform duration-300 group-hover:scale-105`}
+                      >
+                        <Icon size={32} className="stroke-[1.5]" />
+                      </div>
+
+                      <span className="text-[10px] font-heading font-extrabold tracking-widest text-main-text uppercase opacity-80">
+                        OPS Singapore Textiles
+                      </span>
                     </div>
-
-                    <span className="text-[10px] font-heading font-extrabold tracking-widest text-main-text uppercase opacity-80">
-                      OPS Singapore Textiles
-                    </span>
-                  </div>
+                  )}
 
                   {/* Category badge */}
-                  <div className="absolute top-4 left-4 z-10">
+                  <div className="absolute top-4 left-4 z-20">
                     <span
-                      className={`inline-flex items-center px-3 py-1 rounded-full text-[9px] font-mono font-bold uppercase tracking-widest bg-white/95 shadow-3xs ${style.accentColor} border border-soft-border/10`}
+                      className={`inline-flex items-center px-3 py-1 rounded-full text-[9px] font-mono font-bold uppercase tracking-widest ${
+                        cat.cardImage
+                          ? "bg-black/45 backdrop-blur-md text-white border border-white/20"
+                          : `bg-white/95 shadow-3xs ${style.accentColor} border border-soft-border/10`
+                      }`}
                     >
-                      {cat.key === "group-dresses"
-                        ? "Group Order Specialists"
-                        : "Wholesale & Retail"}
+                      {cat.badgeText}
                     </span>
                   </div>
                 </div>

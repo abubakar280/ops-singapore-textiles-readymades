@@ -4,16 +4,52 @@ import { getProductImageUrl } from "./sanityImage";
 export const ALL_CATEGORIES_QUERY = `
   *[
     _type == "category" &&
-    active != false &&
+    active == true &&
     !(_id in path("drafts.**"))
-  ] | order(displayOrder asc, title asc) {
+  ] | order(displayOrder asc) {
     _id,
-    title,
-    slug,
+    name,
     categoryKey,
-    description,
-    coverImage,
-    displayOrder
+    slug,
+    shortDescription,
+    fullDescription,
+    heroImage,
+    cardImage,
+    bannerImage,
+    badgeText,
+    displayOrder,
+    showInHero,
+    showInCollections,
+    active
+  }
+`;
+
+export const CATEGORY_BY_KEY_OR_SLUG_QUERY = `
+  *[
+    _type == "category" &&
+    active == true &&
+    (
+      categoryKey == $slug ||
+      slug.current == $slug ||
+      categoryKey == $categoryKey ||
+      name == $name
+    ) &&
+    !(_id in path("drafts.**"))
+  ][0] {
+    _id,
+    name,
+    categoryKey,
+    slug,
+    shortDescription,
+    fullDescription,
+    heroImage,
+    cardImage,
+    bannerImage,
+    badgeText,
+    displayOrder,
+    showInHero,
+    showInCollections,
+    active
   }
 `;
 

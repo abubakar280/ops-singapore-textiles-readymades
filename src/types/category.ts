@@ -3,8 +3,17 @@ export interface LocalCategory {
   slug: string;
   name: string;
   description: string;
-  metaTitle: string;
-  metaDescription: string;
+  shortDescription?: string;
+  fullDescription?: string;
+  metaTitle?: string;
+  metaDescription?: string;
   coverImage?: string;
+  heroImage?: string;
+  cardImage?: string;
+  bannerImage?: string;
+  badgeText?: string;
   displayOrder?: number;
+  showInHero?: boolean;
+  showInCollections?: boolean;
+  active?: boolean;
 }

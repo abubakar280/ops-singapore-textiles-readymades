@@ -23,6 +23,8 @@ import { sanityClient } from "../lib/sanityClient";
 import {
   mapSanityProductToLocal,
   PRODUCTS_BY_CATEGORY_QUERY,
+  CATEGORY_BY_KEY_OR_SLUG_QUERY,
+  resolveImageUrl,
 } from "../lib/sanityQueries";
 
 // Utilities
@@ -31,16 +33,18 @@ import { searchProducts } from "../utils/searchProducts";
 import { sortProducts, SortOption } from "../utils/sortProducts";
 import { getGeneralWhatsAppUrl } from "../utils/whatsapp";
 import { LocalProduct } from "../types/product";
+import { SanityCategory } from "../types";
 
 export const CollectionPage: React.FC = () => {
   const { slug } = useParams<{ slug: string }>();
 
-  const activeCategory = useMemo(() => {
+  const localCategory = useMemo(() => {
     return categories.find(
       (category) => category.slug === slug || category.key === slug
     );
   }, [slug]);
 
+  const [sanityCategory, setSanityCategory] = useState<SanityCategory | null>(null);
   const [sanityProducts, setSanityProducts] = useState<LocalProduct[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [searchTerm, setSearchTerm] = useState<string>("");
@@ -50,67 +54,92 @@ export const CollectionPage: React.FC = () => {
   const [quickViewProduct, setQuickViewProduct] =
     useState<LocalProduct | null>(null);
 
+  // Computed category combining Sanity & Local Fallback
+  const activeCategory = useMemo(() => {
+    if (sanityCategory) {
+      const bannerImg = resolveImageUrl(sanityCategory.bannerImage) || resolveImageUrl(sanityCategory.coverImage);
+      return {
+        key: sanityCategory.categoryKey || localCategory?.key || slug || "collection",
+        slug: (typeof sanityCategory.slug === "string" ? sanityCategory.slug : sanityCategory.slug?.current) || localCategory?.slug || slug || "collection",
+        name: sanityCategory.name || sanityCategory.title || localCategory?.name || "Collection",
+        description: sanityCategory.fullDescription || sanityCategory.shortDescription || sanityCategory.description || localCategory?.description || "",
+        coverImage: bannerImg || localCategory?.coverImage,
+      };
+    }
+    if (localCategory) {
+      return {
+        key: localCategory.key,
+        slug: localCategory.slug,
+        name: localCategory.name,
+        description: localCategory.description,
+        coverImage: localCategory.coverImage,
+      };
+    }
+    return null;
+  }, [sanityCategory, localCategory, slug]);
+
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: "auto" });
 
-    if (!activeCategory) {
-      setLoading(false);
-      return;
-    }
-
-    const currentCategory = activeCategory;
     let isMounted = true;
 
-    async function loadCategoryProducts() {
+    async function loadCategoryDataAndProducts() {
       setLoading(true);
 
       if (!sanityClient) {
         console.warn("Sanity client is not configured.");
-
         if (isMounted) {
+          setSanityCategory(null);
           setSanityProducts([]);
           setLoading(false);
         }
-
         return;
       }
 
       try {
-        const queryParams = {
-          categoryKey: currentCategory.key,
-          categorySlug: currentCategory.slug,
-          categoryName: currentCategory.name,
-        };
+        // 1. Fetch matching category document
+        let fetchedCat: SanityCategory | null = null;
+        if (slug) {
+          try {
+            fetchedCat = await sanityClient.fetch(CATEGORY_BY_KEY_OR_SLUG_QUERY, {
+              slug,
+              categoryKey: slug,
+              name: slug,
+            });
+            if (isMounted && fetchedCat) {
+              setSanityCategory(fetchedCat);
+            }
+          } catch (catErr) {
+            console.warn("Error fetching Sanity category document:", catErr);
+          }
+        }
 
-        console.log("SANITY CATEGORY QUERY PARAMS:", queryParams);
+        // 2. Fetch products matching category key, slug, or name
+        const categoryKey = fetchedCat?.categoryKey || localCategory?.key || slug || "";
+        const categorySlug = (typeof fetchedCat?.slug === "string" ? fetchedCat.slug : fetchedCat?.slug?.current) || localCategory?.slug || slug || "";
+        const categoryName = fetchedCat?.name || fetchedCat?.title || localCategory?.name || "";
+
+        const queryParams = {
+          categoryKey,
+          categorySlug,
+          categoryName,
+        };
 
         const rawItems = await sanityClient.fetch(
           PRODUCTS_BY_CATEGORY_QUERY,
           queryParams
         );
 
-        console.log("SANITY CATEGORY PRODUCTS:", {
-          activeCategory: currentCategory,
-          rawItems,
-        });
-
-        if (!isMounted) {
-          return;
-        }
+        if (!isMounted) return;
 
         if (Array.isArray(rawItems)) {
           const mappedProducts = rawItems.map(mapSanityProductToLocal);
-
-          console.log("MAPPED SANITY PRODUCTS:", mappedProducts);
-
           setSanityProducts(mappedProducts);
         } else {
-          console.warn("Sanity response was not an array:", rawItems);
           setSanityProducts([]);
         }
       } catch (error) {
-        console.error("Error fetching Sanity category products:", error);
-
+        console.error("Error fetching Sanity category data & products:", error);
         if (isMounted) {
           setSanityProducts([]);
         }
@@ -121,12 +150,12 @@ export const CollectionPage: React.FC = () => {
       }
     }
 
-    loadCategoryProducts();
+    loadCategoryDataAndProducts();
 
     return () => {
       isMounted = false;
     };
-  }, [activeCategory]);
+  }, [slug, localCategory]);
 
   const processedProducts = useMemo(() => {
     let result = [...sanityProducts];

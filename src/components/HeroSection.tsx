@@ -2,10 +2,14 @@ import React, { useState, useEffect } from "react";
 import { motion, useReducedMotion } from "motion/react";
 import { ArrowRight, MessageSquare, Award, Shirt, Sparkles, Baby, Users } from "lucide-react";
 import { businessInfo } from "../data";
+import { sanityClient } from "../lib/sanityClient";
+import { ALL_CATEGORIES_QUERY, resolveImageUrl } from "../lib/sanityQueries";
+import { SanityCategory } from "../types";
 
 export const HeroSection: React.FC = () => {
   const [shouldAnimate, setShouldAnimate] = useState(false);
   const [imageErrors, setImageErrors] = useState<Record<string, boolean>>({});
+  const [sanityCategories, setSanityCategories] = useState<SanityCategory[]>([]);
   const prefersReducedMotion = useReducedMotion();
 
   const handleImageError = (id: string) => {
@@ -25,6 +29,67 @@ export const HeroSection: React.FC = () => {
       return () => clearTimeout(timer);
     }
   }, []);
+
+  useEffect(() => {
+    let isMounted = true;
+    async function loadSanityCategories() {
+      if (!sanityClient) return;
+      try {
+        const rawCats = await sanityClient.fetch(ALL_CATEGORIES_QUERY);
+        if (isMounted && Array.isArray(rawCats)) {
+          setSanityCategories(rawCats);
+        }
+      } catch (err) {
+        console.warn("Could not fetch Sanity categories for Hero:", err);
+      }
+    }
+    loadSanityCategories();
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  const getHeroSlotData = (
+    key: string,
+    defaultName: string,
+    defaultImage: string,
+    defaultBadge: string
+  ) => {
+    const cat = sanityCategories.find((c) => {
+      const slugValue =
+        typeof c.slug === "string"
+          ? c.slug
+          : c.slug?.current || "";
+
+      const matchesCategory =
+        c.categoryKey === key || slugValue === key;
+
+      const isActive = c.active !== false;
+      const canShowInHero = c.showInHero !== false;
+
+      return matchesCategory && isActive && canShowInHero;
+    });
+
+    if (!cat) {
+      return {
+        name: defaultName,
+        imageUrl: defaultImage,
+        badgeText: defaultBadge,
+      };
+    }
+
+    const resolvedImg = resolveImageUrl(cat.heroImage);
+
+    return {
+      name: cat.name || cat.title || defaultName,
+      imageUrl: resolvedImg || defaultImage,
+      badgeText: cat.badgeText || defaultBadge,
+    };
+  };
+  const slotKids = getHeroSlotData("kids-baby", "Kids & Baby", "https://i.ibb.co/jPDcKH23/kids.webp", "Extra Soft Cotton");
+  const slotWomens = getHeroSlotData("womens", "Women's Collection", "https://i.ibb.co/0g3HkQr/singapore.webp", "Trending Styles");
+  const slotMens = getHeroSlotData("mens", "Men's Collection", "https://i.ibb.co/BHxDD9b4/mens.jpg", "Wholesale & Retail");
+  const slotGroup = getHeroSlotData("group-dresses", "Group Dresses", "https://i.ibb.co/Q3dhkGx5/group.jpg", "Special Pricing");
 
   const handleScrollToSection = (id: string) => {
     const element = document.getElementById(id);
@@ -64,9 +129,9 @@ export const HeroSection: React.FC = () => {
       y: 0,
       scale: 1,
       transition: {
-        type: "tween",
+        type: "tween" as const,
         duration: prefersReducedMotion ? 0.35 : 0.65,
-        ease: [0.215, 0.61, 0.355, 1], // Smooth custom ease-out
+        ease: [0.215, 0.61, 0.355, 1] as const, // Smooth custom ease-out
       },
     },
   };
@@ -233,8 +298,8 @@ export const HeroSection: React.FC = () => {
                 {!imageErrors["kids-baby"] ? (
                   <>
                     <img
-                      src="https://i.ibb.co/jPDcKH23/kids.webp"
-                      alt="Kids & Baby"
+                      src={slotKids.imageUrl}
+                      alt={slotKids.name}
                       referrerPolicy="no-referrer"
                       onError={() => handleImageError("kids-baby")}
                       className="absolute inset-0 w-full h-full object-cover object-center transition-transform duration-500 ease-out group-hover:scale-[1.03] pointer-events-none"
@@ -248,12 +313,12 @@ export const HeroSection: React.FC = () => {
                     <Baby strokeWidth={1.5} size={22} />
                   </div>
                   <span className={`text-[9px] font-mono tracking-wider px-2 py-0.5 rounded-full font-semibold uppercase ${!imageErrors["kids-baby"] ? 'bg-black/35 backdrop-blur-md text-white border border-white/20' : 'text-pastel-peach bg-white/60'}`}>
-                    Extra Soft Cotton
+                    {slotKids.badgeText}
                   </span>
                 </div>
                 <div className="relative z-10">
                   <h3 className={`font-heading font-semibold text-sm sm:text-base leading-tight ${!imageErrors["kids-baby"] ? 'text-white drop-shadow-sm' : 'text-main-text'}`}>
-                    Kids &amp; Baby
+                    {slotKids.name}
                   </h3>
                 </div>
               </motion.div>
@@ -267,8 +332,8 @@ export const HeroSection: React.FC = () => {
                 {!imageErrors["womens"] ? (
                   <>
                     <img
-                      src="https://i.ibb.co/0g3HkQr/singapore.webp"
-                      alt="Women's Collection"
+                      src={slotWomens.imageUrl}
+                      alt={slotWomens.name}
                       referrerPolicy="no-referrer"
                       onError={() => handleImageError("womens")}
                       className="absolute inset-0 w-full h-full object-cover object-center transition-transform duration-500 ease-out group-hover:scale-[1.03] pointer-events-none"
@@ -282,12 +347,12 @@ export const HeroSection: React.FC = () => {
                     <Sparkles strokeWidth={1.5} size={22} />
                   </div>
                   <span className={`text-[9px] font-mono tracking-wider px-2 py-0.5 rounded-full font-semibold uppercase ${!imageErrors["womens"] ? 'bg-black/35 backdrop-blur-md text-white border border-white/20' : 'text-soft-coral bg-white/60'}`}>
-                    Trending Styles
+                    {slotWomens.badgeText}
                   </span>
                 </div>
                 <div className="relative z-10">
                   <h3 className={`font-heading font-semibold text-sm sm:text-base leading-tight ${!imageErrors["womens"] ? 'text-white drop-shadow-sm' : 'text-main-text'}`}>
-                    Women's Collection
+                    {slotWomens.name}
                   </h3>
                 </div>
               </motion.div>
@@ -301,8 +366,8 @@ export const HeroSection: React.FC = () => {
                 {!imageErrors["mens"] ? (
                   <>
                     <img
-                      src="https://i.ibb.co/BHxDD9b4/mens.jpg"
-                      alt="Men's Collection"
+                      src={slotMens.imageUrl}
+                      alt={slotMens.name}
                       referrerPolicy="no-referrer"
                       onError={() => handleImageError("mens")}
                       className="absolute inset-0 w-full h-full object-cover object-center transition-transform duration-500 ease-out group-hover:scale-[1.03] pointer-events-none"
@@ -316,12 +381,12 @@ export const HeroSection: React.FC = () => {
                     <Shirt strokeWidth={1.5} size={22} />
                   </div>
                   <span className={`text-[9px] font-mono tracking-wider px-2 py-0.5 rounded-full font-semibold uppercase ${!imageErrors["mens"] ? 'bg-black/35 backdrop-blur-md text-white border border-white/20' : 'text-muted-blue bg-white/60'}`}>
-                    Wholesale &amp; Retail
+                    {slotMens.badgeText}
                   </span>
                 </div>
                 <div className="relative z-10">
                   <h3 className={`font-heading font-semibold text-sm sm:text-base leading-tight ${!imageErrors["mens"] ? 'text-white drop-shadow-sm' : 'text-main-text'}`}>
-                    Men's Collection
+                    {slotMens.name}
                   </h3>
                 </div>
               </motion.div>
@@ -335,8 +400,8 @@ export const HeroSection: React.FC = () => {
                 {!imageErrors["group-dresses"] ? (
                   <>
                     <img
-                      src="https://i.ibb.co/Q3dhkGx5/group.jpg"
-                      alt="Group Dresses"
+                      src={slotGroup.imageUrl}
+                      alt={slotGroup.name}
                       referrerPolicy="no-referrer"
                       onError={() => handleImageError("group-dresses")}
                       className="absolute inset-0 w-full h-full object-cover object-center transition-transform duration-500 ease-out group-hover:scale-[1.03] pointer-events-none"
@@ -350,15 +415,16 @@ export const HeroSection: React.FC = () => {
                     <Users strokeWidth={1.5} size={22} />
                   </div>
                   <span className={`text-[9px] font-mono tracking-wider px-2 py-0.5 rounded-full font-semibold uppercase ${!imageErrors["group-dresses"] ? 'bg-black/35 backdrop-blur-md text-white border border-white/20' : 'text-sage-green bg-white/60'}`}>
-                    Special Pricing
+                    {slotGroup.badgeText}
                   </span>
                 </div>
                 <div className="relative z-10">
                   <h3 className={`font-heading font-semibold text-sm sm:text-base leading-tight ${!imageErrors["group-dresses"] ? 'text-white drop-shadow-sm' : 'text-main-text'}`}>
-                    Group Dresses
+                    {slotGroup.name}
                   </h3>
                 </div>
               </motion.div>
+
 
             </div>
 
@@ -392,3 +458,4 @@ export const HeroSection: React.FC = () => {
   );
 };
 
+   
