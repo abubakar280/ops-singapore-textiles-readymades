@@ -1,6 +1,3 @@
-/**
- * Shared TypeScript interfaces for Singapore Textiles & Readymades
- */
 
 export interface NavigationLink {
   id: string;
@@ -84,11 +81,11 @@ export interface BusinessInfo {
   googleMapsDirectionsUrl: string;
 }
 
-// ========================================================
-// SANITY INTEGRATION TYPES
-// ========================================================
 
-export type ProductStockStatus = "inStock" | "limitedStock" | "outOfStock";
+export type ProductStockStatus =
+  | "inStock"
+  | "limitedStock"
+  | "outOfStock";
 
 export interface ProductAdditionalDetail {
   label: string;
@@ -109,10 +106,12 @@ export interface SanityCategory {
   _id: string;
   name?: string;
   title?: string;
-  slug?: {
-    _type: "slug";
-    current: string;
-  } | string;
+  slug?:
+    | {
+        _type: "slug";
+        current: string;
+      }
+    | string;
   categoryKey: string;
   shortDescription?: string;
   fullDescription?: string;
@@ -149,3 +148,5 @@ export interface CollectionRouteConfig {
   metaTitle: string;
   metaDescription: string;
 }
+export * from "./types/promotion";
+export * from "./types/gallery";

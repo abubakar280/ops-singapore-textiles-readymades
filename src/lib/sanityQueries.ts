@@ -1,5 +1,11 @@
 import { LocalProduct } from "../types/product";
+import { Promotion, PromotionLinkType } from "../types/promotion";
+import { GalleryItem } from "../types/gallery";
 import { getProductImageUrl } from "./sanityImage";
+
+// ========================================================
+// CATEGORY QUERIES
+// ========================================================
 
 export const ALL_CATEGORIES_QUERY = `
   *[
@@ -52,6 +58,10 @@ export const CATEGORY_BY_KEY_OR_SLUG_QUERY = `
     active
   }
 `;
+
+// ========================================================
+// PRODUCT QUERIES
+// ========================================================
 
 /**
  * Fetch products belonging to a selected category.
@@ -121,6 +131,10 @@ export const ALL_PRODUCTS_QUERY = `
   }
 `;
 
+// ========================================================
+// SHARED IMAGE HELPER
+// ========================================================
+
 /**
  * Convert a Sanity image object or normal URL into a usable image URL.
  */
@@ -139,6 +153,10 @@ export function resolveImageUrl(img: any): string {
 
   return "";
 }
+
+// ========================================================
+// PRODUCT MAPPER
+// ========================================================
 
 /**
  * Convert a Sanity product into the format used by the website.
@@ -166,5 +184,177 @@ export function mapSanityProductToLocal(sp: any): LocalProduct {
       sp.stockStatus === "outOfStock" ? "outOfStock" : "inStock",
     featured: Boolean(sp.featured),
     images,
+  };
+}
+
+// ========================================================
+// PROMOTION
+// ========================================================
+
+/**
+ * Fetch active promotional campaigns ordered by
+ * displayOrder asc, _createdAt desc.
+ */
+export const ACTIVE_PROMOTIONS_QUERY = `
+  *[
+    _type == "promotion" &&
+    active == true &&
+    !(_id in path("drafts.**"))
+  ] | order(displayOrder asc, _createdAt desc) {
+    _id,
+    title,
+    shortDescription,
+    image,
+    offerPercentage,
+    startDate,
+    endDate,
+    active,
+    displayOrder,
+    linkType,
+    linkValue
+  }
+`;
+
+/**
+ * Convert a Sanity promotion document into the format
+ * used by the website.
+ */
+export function mapSanityPromotionToLocal(sp: any): Promotion {
+  const imageUrl = resolveImageUrl(sp.image);
+
+  return {
+    id: sp._id || "",
+    title: sp.title || "",
+    shortDescription: sp.shortDescription || "",
+    imageUrl,
+
+    offerPercentage:
+      typeof sp.offerPercentage === "number" &&
+      sp.offerPercentage > 0
+        ? sp.offerPercentage
+        : undefined,
+
+    startDate: sp.startDate || "",
+    endDate: sp.endDate || "",
+    active: sp.active !== false,
+
+    displayOrder:
+      typeof sp.displayOrder === "number"
+        ? sp.displayOrder
+        : 1,
+
+    linkType:
+      (sp.linkType as PromotionLinkType) || "none",
+
+    linkValue: sp.linkValue || "",
+  };
+}
+
+/**
+ * Client-side validation for promotion date range
+ * and active status.
+ *
+ * Valid iff:
+ * - active === true
+ * - current time >= startDate
+ * - current time <= endDate
+ */
+export function isPromotionValid(
+  promo: Promotion,
+  nowMs: number = Date.now()
+): boolean {
+  if (!promo.active) {
+    return false;
+  }
+
+  const now = nowMs;
+
+  if (promo.startDate) {
+    const start = new Date(promo.startDate).getTime();
+
+    if (isNaN(start) || now < start) {
+      return false;
+    }
+  } else {
+    return false;
+  }
+
+  if (promo.endDate) {
+    const end = new Date(promo.endDate).getTime();
+
+    if (isNaN(end) || now > end) {
+      return false;
+    }
+  } else {
+    return false;
+  }
+
+  return true;
+}
+
+// ========================================================
+// GALLERY
+// ========================================================
+
+/**
+ * Fetch active gallery items ordered by
+ * displayOrder asc, _createdAt desc.
+ */
+export const ACTIVE_GALLERY_ITEMS_QUERY = `
+  *[
+    _type == "galleryItem" &&
+    active == true &&
+    !(_id in path("drafts.**"))
+  ] | order(displayOrder asc, _createdAt desc) {
+    _id,
+    title,
+    image,
+    category,
+    shortDescription,
+    displayOrder,
+    active
+  }
+`;
+
+const GALLERY_CATEGORY_LABELS: Record<string, string> = {
+  "kids-baby": "Kids & Baby",
+  womens: "Women's Collection",
+  mens: "Men's Collection",
+  "group-dresses": "Group Dresses",
+  religious: "Religious Collection",
+  "home-essentials": "Home Essentials",
+  store: "Store / Showroom",
+  other: "Other",
+};
+
+/**
+ * Convert a Sanity gallery item document into
+ * the format used by the website.
+ */
+export function mapSanityGalleryItemToLocal(
+  item: any
+): GalleryItem {
+  const imageUrl = resolveImageUrl(item.image);
+
+  const catKey = item.category || "";
+
+  const categoryLabel =
+    GALLERY_CATEGORY_LABELS[catKey] ||
+    (catKey ? catKey : undefined);
+
+  return {
+    id: item._id || "",
+    title: item.title || "Gallery Photo",
+    imageUrl,
+    category: catKey || undefined,
+    categoryLabel,
+    shortDescription: item.shortDescription || "",
+
+    displayOrder:
+      typeof item.displayOrder === "number"
+        ? item.displayOrder
+        : 1,
+
+    active: item.active !== false,
   };
 }
