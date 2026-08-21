@@ -2,6 +2,7 @@ import React from "react";
 import { Users, Check, MessageSquare, ShieldCheck, Award, Smile } from "lucide-react";
 import { businessInfo } from "../data";
 import { PlaceholderImage } from "./PlaceholderImage";
+import { trackPhoneClick, trackWhatsAppClick } from "../lib/analytics";
 
 export const GroupOrders: React.FC = () => {
   return (
@@ -95,6 +96,7 @@ export const GroupOrders: React.FC = () => {
                 href="https://wa.me/917200983970?text=Hi%20Singapore%20Textiles%20%26%20Readymades%2C%20I%20would%20like%20to%20get%20a%20pricing%20quote%20for%20a%20group%20order."
                 target="_blank"
                 rel="noopener noreferrer"
+                onClick={() => trackWhatsAppClick("group_orders")}
                 className="inline-flex items-center justify-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white font-heading font-semibold text-sm px-6 py-3 rounded-xl transition-all shadow-xs"
               >
                 <MessageSquare size={16} fill="currentColor" />
@@ -102,6 +104,7 @@ export const GroupOrders: React.FC = () => {
               </a>
               <a
                 href={businessInfo.phoneDial}
+                onClick={() => trackPhoneClick("group_orders")}
                 className="inline-flex items-center justify-center gap-1.5 border border-soft-border text-muted-text hover:text-main-text hover:border-soft-border/80 font-heading font-semibold text-sm px-5 py-3 rounded-xl"
               >
                 <span>Call Coordinator</span>

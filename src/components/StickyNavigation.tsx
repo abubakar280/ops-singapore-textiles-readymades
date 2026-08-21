@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from "motion/react";
 import { Menu, X, Phone, Shirt, MessageSquare, Instagram } from "lucide-react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { businessInfo, navigationLinks } from "../data";
+import { trackPhoneClick, trackWhatsAppClick } from "../lib/analytics";
 
 export const StickyNavigation: React.FC = () => {
   const [activeSection, setActiveSection] = useState("home");
@@ -127,6 +128,7 @@ export const StickyNavigation: React.FC = () => {
           <div className="hidden sm:flex items-center gap-3">
             <a
               href={businessInfo.phoneDial}
+              onClick={() => trackPhoneClick("header")}
               className="flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-soft-border hover:border-muted-blue/50 text-xs font-medium text-muted-text hover:text-muted-blue transition-all"
               aria-label={`Call us at ${businessInfo.phoneRaw}`}
             >
@@ -138,6 +140,7 @@ export const StickyNavigation: React.FC = () => {
               href={businessInfo.whatsappUrl}
               target="_blank"
               rel="noopener noreferrer"
+              onClick={() => trackWhatsAppClick("header")}
               className="flex items-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white font-medium text-xs px-4 py-2 rounded-full shadow-xs hover:shadow-sm transition-all hover:scale-[1.02]"
               aria-label="Chat with us on WhatsApp"
             >
@@ -151,6 +154,7 @@ export const StickyNavigation: React.FC = () => {
             {/* Quick mobile-only Call icon */}
             <a
               href={businessInfo.phoneDial}
+              onClick={() => trackPhoneClick("header_mobile_icon")}
               className="p-2 text-muted-text hover:text-muted-blue rounded-full bg-white border border-soft-border sm:hidden"
               aria-label="Call Store"
             >
@@ -203,6 +207,7 @@ export const StickyNavigation: React.FC = () => {
                   href={businessInfo.whatsappUrl}
                   target="_blank"
                   rel="noopener noreferrer"
+                  onClick={() => trackWhatsAppClick("mobile_nav_menu")}
                   className="flex items-center justify-center gap-2 bg-emerald-600 text-white font-heading font-medium py-3 rounded-xl shadow-xs"
                 >
                   <MessageSquare size={16} fill="currentColor" />
@@ -211,6 +216,7 @@ export const StickyNavigation: React.FC = () => {
                 
                 <a
                   href={businessInfo.phoneDial}
+                  onClick={() => trackPhoneClick("mobile_nav_menu")}
                   className="flex items-center justify-center gap-2 border border-soft-border text-muted-text hover:text-main-text font-heading font-medium py-3 rounded-xl bg-light-beige/10"
                 >
                   <Phone size={16} />

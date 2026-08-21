@@ -64,11 +64,7 @@ export const IntroScreen: React.FC<IntroScreenProps> = ({ onComplete }) => {
             initial={{ opacity: 0, scale: 0.8 }}
             animate={{ opacity: 1, scale: 1 }}
             exit={{ y: -240, scale: 0.35, opacity: 0 }}
-            transition={{
-              opacity: { duration: 0.6, ease: "easeOut" },
-              scale: { duration: 0.6, ease: "easeOut" },
-              exit: { duration: 0.7, ease: [0.25, 1, 0.5, 1] }
-            }}
+            transition={{ duration: 0.6, ease: "easeOut" }}
             className="w-32 h-32 md:w-40 md:h-40 flex items-center justify-center mb-6"
           >
             {!imageError ? (
@@ -93,11 +89,7 @@ export const IntroScreen: React.FC<IntroScreenProps> = ({ onComplete }) => {
             initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: 15 }}
-            transition={{
-              initial: { y: 12, opacity: 0 },
-              animate: { delay: 0.3, duration: 0.5, ease: "easeOut" },
-              exit: { duration: 0.4 }
-            }}
+            transition={{ delay: 0.3, duration: 0.5, ease: "easeOut" }}
             className="font-serif text-2xl md:text-3xl font-bold tracking-tight text-main-text"
           >
             <strong>{businessInfo.name}</strong>
@@ -108,10 +100,7 @@ export const IntroScreen: React.FC<IntroScreenProps> = ({ onComplete }) => {
             initial={{ width: 0 }}
             animate={{ width: "60px" }}
             exit={{ opacity: 0, scale: 0.8 }}
-            transition={{
-              animate: { delay: 0.6, duration: 0.4 },
-              exit: { duration: 0.3 }
-            }}
+            transition={{ delay: 0.6, duration: 0.4 }}
             className="h-[2px] bg-soft-coral/40 my-4"
           />
 
@@ -120,11 +109,7 @@ export const IntroScreen: React.FC<IntroScreenProps> = ({ onComplete }) => {
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: 15 }}
-            transition={{
-              initial: { y: 10, opacity: 0 },
-              animate: { delay: 0.8, duration: 0.5, ease: "easeOut" },
-              exit: { duration: 0.4 }
-            }}
+            transition={{ delay: 0.8, duration: 0.5, ease: "easeOut" }}
             className="flex items-center gap-1.5 text-muted-text font-medium tracking-wide text-sm"
           >
             <Award size={16} className="text-warm-yellow animate-pulse" />
@@ -136,10 +121,7 @@ export const IntroScreen: React.FC<IntroScreenProps> = ({ onComplete }) => {
             initial={{ opacity: 0 }}
             animate={{ opacity: 0.6 }}
             exit={{ opacity: 0 }}
-            transition={{
-              animate: { delay: 1.1, duration: 0.4 },
-              exit: { duration: 0.3 }
-            }}
+            transition={{ delay: 1.1, duration: 0.4 }}
             className="text-[11px] text-muted-text font-mono mt-6 tracking-widest uppercase"
           >
             Madurai, India

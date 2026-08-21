@@ -18,6 +18,11 @@ import {
 } from "../lib/sanityQueries";
 import { Promotion } from "../types/promotion";
 import { getGeneralWhatsAppUrl } from "../utils/whatsapp";
+import {
+  trackPromotionView,
+  trackPromotionClick,
+  trackWhatsAppClick,
+} from "../lib/analytics";
 
 export const SeasonalPromotions: React.FC = () => {
   const prefersReducedMotion = useReducedMotion();
@@ -76,6 +81,9 @@ export const SeasonalPromotions: React.FC = () => {
   const validPromotions = promotions.filter((p) => isPromotionValid(p, currentTime));
   const promoCount = validPromotions.length;
 
+
+  const firstDuplicateRef = useRef<HTMLDivElement>(null);
+
   // Temporarily pause auto-scrolling (e.g., when user clicks manual arrows)
   const pauseTemporarily = () => {
     setIsPaused(true);
@@ -104,12 +112,13 @@ export const SeasonalPromotions: React.FC = () => {
     const step = () => {
       if (container) {
         const maxScrollLeft = container.scrollWidth - container.clientWidth;
-        if (maxScrollLeft > 0) {
-          if (container.scrollLeft >= maxScrollLeft - 1) {
-            container.scrollLeft = 0; // Smooth wrap back to start
-          } else {
-            container.scrollLeft += speed;
+        const sequenceWidth = firstDuplicateRef.current ? firstDuplicateRef.current.offsetLeft : 0;
+        if (maxScrollLeft > 0 && sequenceWidth > 0) {
+          if (container.scrollLeft >= sequenceWidth) {
+            // Seamless loop: subtract exact measured distance to first duplicate card
+            container.scrollLeft -= sequenceWidth;
           }
+          container.scrollLeft += speed;
         }
       }
       animationId = requestAnimationFrame(step);
@@ -177,23 +186,28 @@ export const SeasonalPromotions: React.FC = () => {
 
           {/* Navigation Controls when 4+ items exist */}
           {promoCount >= 4 && (
-            <div className="hidden sm:flex items-center gap-2 self-end">
-              <button
-                type="button"
-                onClick={handleScrollLeft}
-                className="p-2.5 rounded-full border border-soft-border bg-white text-main-text hover:bg-soft-coral hover:text-white hover:border-soft-coral transition-all shadow-3xs cursor-pointer focus:outline-none"
-                aria-label="Scroll left promotions"
-              >
-                <ChevronLeft size={18} />
-              </button>
-              <button
-                type="button"
-                onClick={handleScrollRight}
-                className="p-2.5 rounded-full border border-soft-border bg-white text-main-text hover:bg-soft-coral hover:text-white hover:border-soft-coral transition-all shadow-3xs cursor-pointer focus:outline-none"
-                aria-label="Scroll right promotions"
-              >
-                <ChevronRight size={18} />
-              </button>
+            <div className="hidden sm:flex items-center gap-3 self-end">
+              <span className="text-xs text-muted-text font-heading font-medium">
+                Swipe / Browse offers
+              </span>
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={handleScrollLeft}
+                  className="p-2.5 rounded-full border border-soft-border bg-white text-main-text hover:bg-soft-coral hover:text-white hover:border-soft-coral transition-all shadow-3xs cursor-pointer focus:outline-none"
+                  aria-label="Scroll left promotions"
+                >
+                  <ChevronLeft size={18} />
+                </button>
+                <button
+                  type="button"
+                  onClick={handleScrollRight}
+                  className="p-2.5 rounded-full border border-soft-border bg-white text-main-text hover:bg-soft-coral hover:text-white hover:border-soft-coral transition-all shadow-3xs cursor-pointer focus:outline-none"
+                  aria-label="Scroll right promotions"
+                >
+                  <ChevronRight size={18} />
+                </button>
+              </div>
             </div>
           )}
         </div>
@@ -240,19 +254,36 @@ export const SeasonalPromotions: React.FC = () => {
             onTouchStart={() => setIsPaused(true)}
             onTouchEnd={() => pauseTemporarily()}
           >
+            {/* Subtle right edge fade indicating more content */}
+            <div className="pointer-events-none absolute right-0 top-0 bottom-0 w-12 sm:w-20 bg-gradient-to-l from-white/90 via-white/40 to-transparent z-10" />
+
             <div
               ref={scrollContainerRef}
-              className="flex gap-6 overflow-x-auto pb-4 pt-1 snap-x snap-mandatory scrollbar-none"
+              className="flex gap-6 overflow-x-auto pb-4 pt-1 snap-x snap-mandatory md:snap-none scrollbar-none"
               style={{
                 scrollBehavior: "auto", // Allow smooth pixel stepping via RAF
               }}
             >
+              {/* Original Track */}
               {validPromotions.map((promo) => (
                 <div
                   key={promo.id}
-                  className="w-[280px] sm:w-[340px] md:w-[380px] flex-shrink-0 snap-start"
+                  className="w-[280px] sm:w-[340px] md:w-[380px] flex-shrink-0 snap-start md:snap-align-none"
                 >
                   <PromotionCard promotion={promo} />
+                </div>
+              ))}
+
+              {/* Duplicated Track for Seamless Loop */}
+              {validPromotions.map((promo, idx) => (
+                <div
+                  key={`${promo.id}-dup`}
+                  ref={idx === 0 ? firstDuplicateRef : undefined}
+                  className="w-[280px] sm:w-[340px] md:w-[380px] flex-shrink-0 snap-start md:snap-align-none pointer-events-none select-none"
+                  aria-hidden="true"
+                  inert
+                >
+                  <PromotionCard promotion={promo} isDuplicate />
                 </div>
               ))}
             </div>
@@ -271,11 +302,13 @@ export const SeasonalPromotions: React.FC = () => {
 interface PromotionCardProps {
   promotion: Promotion;
   isSingleBanner?: boolean;
+  isDuplicate?: boolean;
 }
 
 const PromotionCard: React.FC<PromotionCardProps> = ({
   promotion,
   isSingleBanner = false,
+  isDuplicate = false,
 }) => {
   const [imageError, setImageError] = useState(false);
 
@@ -288,6 +321,30 @@ const PromotionCard: React.FC<PromotionCardProps> = ({
     endDateObj &&
     endDateObj.getTime() - Date.now() < 3 * 24 * 60 * 60 * 1000 &&
     endDateObj.getTime() - Date.now() > 0;
+
+  // Track promotion view for original (non-duplicate) promotion cards
+  useEffect(() => {
+    if (!isDuplicate) {
+      trackPromotionView(
+        promotion.id,
+        promotion.title,
+        promotion.offerPercentage,
+        promotion.linkType
+      );
+    }
+  }, [isDuplicate, promotion.id, promotion.title, promotion.offerPercentage, promotion.linkType]);
+
+  const handlePromoClick = () => {
+    trackPromotionClick(
+      promotion.id,
+      promotion.title,
+      promotion.offerPercentage,
+      promotion.linkType
+    );
+    if (promotion.linkType === "whatsapp") {
+      trackWhatsAppClick("promotion");
+    }
+  };
 
   // Render Inner Card Content
   const renderCardContent = () => {
@@ -408,13 +465,29 @@ const PromotionCard: React.FC<PromotionCardProps> = ({
     );
   };
 
+  // If this card is a duplicate copy for seamless visual looping, disable interaction and tabIndex
+  if (isDuplicate) {
+    return (
+      <div
+        className="h-full pointer-events-none"
+        aria-hidden="true"
+        tabIndex={-1}
+      >
+        {renderCardContent()}
+      </div>
+    );
+  }
+
   // Wrap in appropriate anchor or link tag based on linkType
   if (hasLink && promotion.linkValue) {
     if (promotion.linkType === "collection") {
       return (
         <Link
           to={promotion.linkValue}
-          onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
+          onClick={() => {
+            handlePromoClick();
+            window.scrollTo({ top: 0, behavior: "smooth" });
+          }}
           className="block h-full focus:outline-none focus:ring-2 focus:ring-soft-coral/50 rounded-2xl"
           aria-label={`Explore promotion: ${promotion.title}`}
         >
@@ -433,6 +506,7 @@ const PromotionCard: React.FC<PromotionCardProps> = ({
           href={waUrl}
           target="_blank"
           rel="noopener noreferrer"
+          onClick={handlePromoClick}
           className="block h-full focus:outline-none focus:ring-2 focus:ring-soft-coral/50 rounded-2xl"
           aria-label={`Inquire about ${promotion.title} on WhatsApp`}
         >
@@ -447,6 +521,7 @@ const PromotionCard: React.FC<PromotionCardProps> = ({
           href={promotion.linkValue}
           target="_blank"
           rel="noopener noreferrer"
+          onClick={handlePromoClick}
           className="block h-full focus:outline-none focus:ring-2 focus:ring-soft-coral/50 rounded-2xl"
           aria-label={`Open link for ${promotion.title}`}
         >

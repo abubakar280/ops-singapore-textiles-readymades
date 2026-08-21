@@ -9,6 +9,7 @@ import {
 import { sanityClient } from "../lib/sanityClient";
 import { ALL_CATEGORIES_QUERY, resolveImageUrl } from "../lib/sanityQueries";
 import { SanityCategory } from "../types";
+import { trackCollectionClick } from "../lib/analytics";
 
 interface DisplayCategory {
   key: string;
@@ -295,6 +296,7 @@ export const InteractiveCollections: React.FC = () => {
                   <Link
                     to={`/collections/${cat.slug}`}
                     onClick={() => {
+                      trackCollectionClick(cat.key, cat.name, "homepage_collections");
                       window.scrollTo({
                         top: 0,
                         behavior: prefersReducedMotion ? "auto" : "smooth",

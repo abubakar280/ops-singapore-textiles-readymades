@@ -5,6 +5,7 @@ import { businessInfo } from "../data";
 import { sanityClient } from "../lib/sanityClient";
 import { ALL_CATEGORIES_QUERY, resolveImageUrl } from "../lib/sanityQueries";
 import { SanityCategory } from "../types";
+import { trackHeroCtaClick, trackWhatsAppClick } from "../lib/analytics";
 
 export const HeroSection: React.FC = () => {
   const [shouldAnimate, setShouldAnimate] = useState(false);
@@ -226,7 +227,10 @@ export const HeroSection: React.FC = () => {
               className="flex flex-col sm:flex-row items-stretch sm:items-center gap-4 mb-10"
             >
               <button
-                onClick={() => handleScrollToSection("collections")}
+                onClick={() => {
+                  trackHeroCtaClick("explore_collections");
+                  handleScrollToSection("collections");
+                }}
                 className="group relative inline-flex items-center justify-center gap-2 bg-soft-coral text-white font-heading font-semibold text-sm px-8 py-4 rounded-full shadow-[0_4px_14px_rgba(227,124,109,0.25)] hover:shadow-[0_6px_20px_rgba(227,124,109,0.35)] transition-all hover:-translate-y-0.5 active:translate-y-0 cursor-pointer overflow-hidden"
               >
                 <span>Explore Collections</span>
@@ -237,6 +241,7 @@ export const HeroSection: React.FC = () => {
                 href={businessInfo.whatsappUrl}
                 target="_blank"
                 rel="noopener noreferrer"
+                onClick={() => trackWhatsAppClick("hero")}
                 className="inline-flex items-center justify-center gap-2 border border-soft-border hover:border-soft-coral bg-white hover:bg-warm-ivory text-main-text font-heading font-semibold text-sm px-8 py-4 rounded-full shadow-2xs hover:shadow-xs transition-all hover:-translate-y-0.5 active:translate-y-0 cursor-pointer"
               >
                 <MessageSquare size={16} className="text-soft-coral fill-soft-coral/10" />

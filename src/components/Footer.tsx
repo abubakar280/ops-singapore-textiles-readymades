@@ -1,6 +1,7 @@
 import React from "react";
 import { Phone, MessageSquare, MapPin, Shirt, Heart, Award, Instagram } from "lucide-react";
 import { businessInfo, navigationLinks } from "../data";
+import { trackPhoneClick, trackWhatsAppClick } from "../lib/analytics";
 
 export const Footer: React.FC = () => {
   const [logoError, setLogoError] = React.useState(false);
@@ -110,6 +111,7 @@ export const Footer: React.FC = () => {
                 <Phone size={16} className="text-muted-blue shrink-0" />
                 <a
                   href={businessInfo.phoneDial}
+                  onClick={() => trackPhoneClick("footer")}
                   className="text-muted-text hover:text-muted-blue font-mono font-medium text-sm transition-colors"
                 >
                   {businessInfo.phoneRaw}
@@ -123,6 +125,7 @@ export const Footer: React.FC = () => {
                   href={businessInfo.whatsappUrl}
                   target="_blank"
                   rel="noopener noreferrer"
+                  onClick={() => trackWhatsAppClick("footer")}
                   className="text-emerald-700 hover:text-emerald-800 text-sm font-heading font-bold transition-colors"
                 >
                   WhatsApp Quick Chat

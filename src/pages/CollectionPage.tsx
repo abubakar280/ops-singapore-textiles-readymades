@@ -34,6 +34,7 @@ import { sortProducts, SortOption } from "../utils/sortProducts";
 import { getGeneralWhatsAppUrl } from "../utils/whatsapp";
 import { LocalProduct } from "../types/product";
 import { SanityCategory } from "../types";
+import { trackCollectionView, trackWhatsAppClick } from "../lib/analytics";
 
 export const CollectionPage: React.FC = () => {
   const { slug } = useParams<{ slug: string }>();
@@ -156,6 +157,17 @@ export const CollectionPage: React.FC = () => {
       isMounted = false;
     };
   }, [slug, localCategory]);
+
+  // Track collection page view when category data is loaded
+  useEffect(() => {
+    if (activeCategory && !loading) {
+      trackCollectionView(
+        activeCategory.key,
+        activeCategory.name,
+        window.location.pathname
+      );
+    }
+  }, [activeCategory?.key, loading]);
 
   const processedProducts = useMemo(() => {
     let result = [...sanityProducts];
@@ -373,6 +385,7 @@ export const CollectionPage: React.FC = () => {
                     )}
                     target="_blank"
                     rel="noopener noreferrer"
+                    onClick={() => trackWhatsAppClick("collection_empty_state")}
                     className="inline-flex items-center gap-1.5 bg-emerald-600 hover:bg-emerald-700 text-white font-heading font-extrabold text-xs px-5 py-3 rounded-xl transition-colors shadow-3xs"
                   >
                     <MessageSquare

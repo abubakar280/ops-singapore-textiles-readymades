@@ -1,6 +1,11 @@
 import React from "react";
 import { MapPin, Phone, MessageSquare, Clock, Navigation, CornerUpRight, Map, Instagram } from "lucide-react";
 import { businessInfo } from "../data";
+import {
+  trackDirectionsClick,
+  trackPhoneClick,
+  trackWhatsAppClick,
+} from "../lib/analytics";
 
 export const ContactSection: React.FC = () => {
   return (
@@ -42,6 +47,7 @@ export const ContactSection: React.FC = () => {
                     href={businessInfo.googleMapsDirectionsUrl}
                     target="_blank"
                     rel="noopener noreferrer"
+                    onClick={() => trackDirectionsClick("contact_section_address")}
                     className="inline-flex items-center gap-1.5 text-xs font-heading font-bold text-soft-coral hover:text-soft-coral/80 bg-soft-coral/10 py-2 px-4 rounded-lg transition-colors"
                   >
                     <Navigation size={12} fill="currentColor" />
@@ -69,6 +75,7 @@ export const ContactSection: React.FC = () => {
                 <div className="mt-4 flex flex-wrap gap-2.5">
                   <a
                     href={businessInfo.phoneDial}
+                    onClick={() => trackPhoneClick("contact_section")}
                     className="inline-flex items-center gap-1.5 text-xs font-heading font-bold text-muted-blue hover:text-muted-blue/80 bg-muted-blue/10 py-2.5 px-4 rounded-lg transition-colors"
                   >
                     <Phone size={12} />
@@ -78,6 +85,7 @@ export const ContactSection: React.FC = () => {
                     href={businessInfo.whatsappUrl}
                     target="_blank"
                     rel="noopener noreferrer"
+                    onClick={() => trackWhatsAppClick("contact_section")}
                     className="inline-flex items-center gap-1.5 text-xs font-heading font-bold text-emerald-700 hover:text-emerald-800 bg-emerald-500/10 py-2.5 px-4 rounded-lg transition-colors"
                   >
                     <MessageSquare size={12} fill="currentColor" />
@@ -146,6 +154,7 @@ export const ContactSection: React.FC = () => {
                   href={businessInfo.googleMapsDirectionsUrl}
                   target="_blank"
                   rel="noopener noreferrer"
+                  onClick={() => trackDirectionsClick("contact_section_map")}
                   className="inline-flex items-center gap-2 bg-main-text hover:bg-main-text/90 text-white font-heading font-semibold text-xs px-6 py-3.5 rounded-xl shadow-xs transition-all hover:scale-[1.02]"
                 >
                   <CornerUpRight size={14} />

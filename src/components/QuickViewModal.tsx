@@ -4,6 +4,11 @@ import { LocalProduct } from "../types/product";
 import { products } from "../data/products";
 import { StockBadge } from "./StockBadge";
 import { getWhatsAppEnquiryUrl } from "../utils/whatsapp";
+import {
+  trackProductView,
+  trackProductEnquiry,
+  trackWhatsAppClick,
+} from "../lib/analytics";
 
 interface QuickViewModalProps {
   product: LocalProduct;
@@ -22,10 +27,11 @@ export const QuickViewModal: React.FC<QuickViewModalProps> = ({
   const modalRef = useRef<HTMLDivElement | null>(null);
   const closeBtnRef = useRef<HTMLButtonElement | null>(null);
 
-  // Set active image back to 0 if the product changes
+  // Set active image back to 0 if the product changes and track product view
   useEffect(() => {
     setActiveImgIndex(0);
-  }, [product]);
+    trackProductView(product.id, product.productName, categoryName);
+  }, [product.id, product.productName, categoryName]);
 
   // Handle keyboard events: Escape to close, tab trapping for accessibility
   useEffect(() => {
@@ -223,6 +229,14 @@ export const QuickViewModal: React.FC<QuickViewModalProps> = ({
                 href={whatsappUrl}
                 target="_blank"
                 rel="noopener noreferrer"
+                onClick={() => {
+                  trackProductEnquiry(product.id, product.productName, categoryName, "whatsapp");
+                  trackWhatsAppClick("quick_view_modal", {
+                    productId: product.id,
+                    productName: product.productName,
+                    category: categoryName,
+                  });
+                }}
                 className={`w-full inline-flex items-center justify-center gap-2 font-heading font-extrabold text-xs sm:text-sm py-3.5 rounded-xl shadow-2xs hover:shadow-xs transition-colors duration-150 ${
                   isOutOfStock
                     ? "bg-rose-50 text-rose-700 hover:bg-rose-100 border border-rose-100"

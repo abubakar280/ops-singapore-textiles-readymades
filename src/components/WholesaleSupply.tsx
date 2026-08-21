@@ -2,6 +2,7 @@ import React from "react";
 import { Truck, MessageSquare, Phone, CheckCircle, Package, ArrowUpRight } from "lucide-react";
 import { businessInfo } from "../data";
 import { PlaceholderImage } from "./PlaceholderImage";
+import { trackPhoneClick, trackWhatsAppClick } from "../lib/analytics";
 
 export const WholesaleSupply: React.FC = () => {
   return (
@@ -59,6 +60,7 @@ export const WholesaleSupply: React.FC = () => {
                 href="https://wa.me/917200983970?text=Hi%20Singapore%20Textiles%20%26%20Readymades%2C%20I%20am%20a%20clothing%20reseller.%20I%20would%20like%20to%20receive%20wholesale%20catalogs%20and%20pricing."
                 target="_blank"
                 rel="noopener noreferrer"
+                onClick={() => trackWhatsAppClick("wholesale_supply")}
                 className="inline-flex items-center justify-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white font-heading font-semibold text-sm px-6 py-3 rounded-xl transition-all shadow-xs"
               >
                 <MessageSquare size={16} fill="currentColor" />
@@ -66,6 +68,7 @@ export const WholesaleSupply: React.FC = () => {
               </a>
               <a
                 href={businessInfo.phoneDial}
+                onClick={() => trackPhoneClick("wholesale_supply")}
                 className="inline-flex items-center justify-center gap-1 text-xs font-heading font-bold text-muted-text hover:text-soft-coral transition-colors py-2 px-3 self-center cursor-pointer"
               >
                 <span>Call Wholesale Manager</span>

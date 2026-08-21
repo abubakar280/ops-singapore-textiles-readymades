@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { Phone, MessageSquare } from "lucide-react";
 import { businessInfo } from "../data";
 import { motion, AnimatePresence } from "motion/react";
+import { trackPhoneClick, trackWhatsAppClick } from "../lib/analytics";
 
 interface FloatingContactButtonsProps {
   show: boolean;
@@ -41,6 +42,7 @@ export const FloatingContactButtons: React.FC<FloatingContactButtonsProps> = ({ 
           >
             <a
               href={businessInfo.phoneDial}
+              onClick={() => trackPhoneClick("floating_button")}
               className="flex items-center justify-center w-11 h-11 sm:w-13 sm:h-13 bg-white hover:bg-light-beige/10 border border-soft-border rounded-full shadow-md text-muted-blue transition-all hover:scale-105 active:scale-95 group relative"
               aria-label="Call Singapore Textiles &amp; Readymades Store"
             >
@@ -66,6 +68,7 @@ export const FloatingContactButtons: React.FC<FloatingContactButtonsProps> = ({ 
               href={businessInfo.whatsappUrl}
               target="_blank"
               rel="noopener noreferrer"
+              onClick={() => trackWhatsAppClick("floating_button")}
               className="flex items-center justify-center w-11 h-11 sm:w-13 sm:h-13 bg-emerald-600 hover:bg-emerald-700 text-white rounded-full shadow-md transition-all hover:scale-105 active:scale-95 group relative"
               aria-label="Chat with Singapore Textiles &amp; Readymades on WhatsApp"
             >

@@ -3,6 +3,11 @@ import { Eye, MessageSquare, Star } from "lucide-react";
 import { LocalProduct } from "../types/product";
 import { StockBadge } from "./StockBadge";
 import { getWhatsAppEnquiryUrl } from "../utils/whatsapp";
+import {
+  trackProductClick,
+  trackProductEnquiry,
+  trackWhatsAppClick,
+} from "../lib/analytics";
 
 interface ProductCardProps {
   product: LocalProduct;
@@ -75,7 +80,10 @@ export const ProductCard: React.FC<ProductCardProps> = ({
         <div className="grid grid-cols-2 gap-2 mt-6 pt-4 border-t border-soft-border/30">
           {/* Quick View Button */}
           <button
-            onClick={() => onQuickView(product)}
+            onClick={() => {
+              trackProductClick(product.id, product.productName, categoryName, "product_card");
+              onQuickView(product);
+            }}
             className="inline-flex items-center justify-center gap-1.5 border border-soft-border/80 hover:bg-light-beige/25 hover:border-soft-border text-main-text font-heading font-bold text-xs py-2.5 rounded-xl transition-all cursor-pointer"
             aria-label={`Quick view details of ${product.productName}`}
           >
@@ -88,6 +96,14 @@ export const ProductCard: React.FC<ProductCardProps> = ({
             href={whatsappUrl}
             target="_blank"
             rel="noopener noreferrer"
+            onClick={() => {
+              trackProductEnquiry(product.id, product.productName, categoryName, "whatsapp");
+              trackWhatsAppClick("product_card", {
+                productId: product.id,
+                productName: product.productName,
+                category: categoryName,
+              });
+            }}
             className={`inline-flex items-center justify-center gap-1.5 font-heading font-bold text-xs py-2.5 rounded-xl shadow-3xs hover:shadow-xs transition-colors duration-150 ${
               isOutOfStock
                 ? "bg-rose-50 text-rose-700 hover:bg-rose-100 border border-rose-100"
